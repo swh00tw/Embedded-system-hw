@@ -1,6 +1,6 @@
 # Step 1
 
-Open mbed_app.json, modify ***config.hostname.value*** to IP your server runs on, then modify ***target_overrides.*.nsapi.default-wifi-ssid*** and ***target_overrides.*.nsapi.default-wifi-password*** to wifi your board connect.
+Open mbed_app.json, modify config.hostname.value to IP your server runs on, then modify target_overrides.*.nsapi.default-wifi-ssid and target_overrides.*.nsapi.default-wifi-password to wifi your board connect.
 
 # Step 2
 
