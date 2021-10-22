@@ -46,7 +46,7 @@ class SocketDemo {
 #if MBED_CONF_APP_USE_TLS_SOCKET
     static constexpr size_t REMOTE_PORT = 443; // tls port
 #else
-    static constexpr size_t REMOTE_PORT = 3001; // standard HTTP port
+    static constexpr size_t REMOTE_PORT = 3005; // standard HTTP port
 #endif // MBED_CONF_APP_USE_TLS_SOCKET
 
 public:
@@ -349,8 +349,8 @@ private:
                 bytes_sent = _socket.send(buffer + bytes_sent, bytes_to_send);
                 bytes_to_send -= bytes_sent;
             }
-            printf("Finish sending\n");
-            ThisThread::sleep_for(10);
+            // printf("Finish sending\n");
+            ThisThread::sleep_for(100);
         };
         return true;
     }
