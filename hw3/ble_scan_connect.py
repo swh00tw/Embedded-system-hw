@@ -70,7 +70,7 @@ try:
 
     if enableNotify:
         # setup to enable notifications
-        dev.writeCharacteristic(cccd, "\x01\x00")
+        dev.writeCharacteristic(cccd, b"\x01\x00")
         print("Enable notifications......")
     if enableIndicate:
         # setup to enable indications
