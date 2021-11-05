@@ -13,6 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// #include "mbed.h" 
+// #include "mbed_events.h" 
+// DigitalOut led1(LED1); 
+// InterruptIn sw(BUTTON1);
 
 #ifndef __BLE_BUTTON_SERVICE_H__
 #define __BLE_BUTTON_SERVICE_H__
@@ -46,3 +50,4 @@ private:
 };
 
 #endif /* #ifndef __BLE_BUTTON_SERVICE_H__ */
+
