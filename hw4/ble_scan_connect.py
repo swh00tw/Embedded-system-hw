@@ -1,5 +1,6 @@
 from bluepy.btle import Peripheral, UUID
 from bluepy.btle import Scanner, DefaultDelegate
+import threading
 class ScanDelegate(DefaultDelegate):
     def __init__(self):
         DefaultDelegate.__init__(self)
@@ -45,8 +46,23 @@ for svc in dev.services:
 #----- add -----
 enableNotify = True
 enableIndicate = False
+#---------------
 
 try:
+    #for LED service
+    
+    LEDService= dev.getServiceByUUID(UUID(0xa002))
+    for ch in LEDService.getCharacteristics():
+        print(str(ch))
+        
+    ch2 = dev.getCharacteristics(uuid=UUID(0xa003))[0]
+    print("ch:", ch2)
+    print("support:", ch2.supportsRead()) 
+    if (ch2.supportsRead()):
+        print("LED service")
+        print(ch2.read())
+    
+    # for buttonService
     testService= dev.getServiceByUUID(UUID(0xa000))
     for ch in testService.getCharacteristics():
         print(str(ch))
@@ -56,7 +72,18 @@ try:
     print("support:", ch.supportsRead()) 
     if (ch.supportsRead()):
         print(ch.read())
-        
+    
+    #control led2 open and close
+    led=0
+    def blink(led):
+        if led==0:
+            ch2.write(bytes("1","utf-8"))
+            led=1
+        elif led==1:
+            ch2.write(bytes("0","utf-8"))
+            led=0
+        return led
+    
     # --------- add CCCD operation --------
     print(ch.valHandle)
     cccd = ch.valHandle + 1
@@ -69,6 +96,7 @@ try:
         print("Enable indications......")
         
     while True:
+        led=blink(led)
         if dev.waitForNotifications(1.0):
             # handleNotification() was called
             continue
