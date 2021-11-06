@@ -134,10 +134,8 @@ private:
     }
 
     void on_data_written(const GattWriteCallbackParams *params) {
-        // wish to receive more than one char... so using array to store
         uint8_t value[5] = {*(params->data)};
-        printf("Receive value %c (%x)\r\n", value[0], value[0]);
-        printf("Receive value %c\r\n", *value);
+        printf("Receive value %c\r\n", value[0]);
         if (params->handle == _led_service->getValueHandle()) {
 	        if (value[0] == 0x30) { //0
                 _led2.write(0);
