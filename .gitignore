@@ -32,6 +32,7 @@ creds.js
 *.png
 *.jpg
 *.jpeg
+*.key
  
  
 # Mac/OSX
@@ -180,3 +181,5 @@ cython_debug/
 #pdf and pages
 *.pdf
 *.pages
+
+/final_project/
