@@ -63,9 +63,9 @@ if __name__ == "__main__":
 
     q = queue.Queue()
     # Display(q)
-    thread2 = Thread(target=Display, args=[q])
+    thread2 = Thread(target=get_frame, args=[pipe])
     thread2.start()
-    get_frame(pipe)
+    Display(q)
     
 
 cv2.destroyAllWindows()
