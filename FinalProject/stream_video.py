@@ -6,17 +6,6 @@ import numpy
 import queue
 from threading import Thread
 
-# FFMPEG_BIN = "ffmpeg"
-# command = [ FFMPEG_BIN,
-#         '-i', 'picamera',             # picamera is the named pipe
-#         '-pix_fmt', 'bgr24',      # opencv requires bgr24 pixel format.
-#         '-vcodec', 'rawvideo',
-#         '-an','-sn',              # we want to disable audio processing (there is no audio)
-#         '-f', 'image2pipe', '-']    
-# pipe = sp.Popen(command, stdout = sp.PIPE, bufsize=10**8)
-
-# q = queue.Queue()
-
 def Display(q):
     while True:
         if q.empty() != True:
