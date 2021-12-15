@@ -1,6 +1,5 @@
-if [ -p picamera ]
-then 
-    rm picamera
-fi
+
+rm -rf picamera
+
 mkfifo picamera
 nc -l 8080 -v > picamera
