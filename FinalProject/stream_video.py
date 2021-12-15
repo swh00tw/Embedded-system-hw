@@ -3,36 +3,69 @@
 import cv2
 import subprocess as sp
 import numpy
+import queue
+from threading import Thread
 
-FFMPEG_BIN = "ffmpeg"
-command = [ FFMPEG_BIN,
-        '-i', 'picamera',             # picamera is the named pipe
-        '-pix_fmt', 'bgr24',      # opencv requires bgr24 pixel format.
-        '-vcodec', 'rawvideo',
-        '-an','-sn',              # we want to disable audio processing (there is no audio)
-        '-f', 'image2pipe', '-']    
-pipe = sp.Popen(command, stdout = sp.PIPE, bufsize=10**8)
+# FFMPEG_BIN = "ffmpeg"
+# command = [ FFMPEG_BIN,
+#         '-i', 'picamera',             # picamera is the named pipe
+#         '-pix_fmt', 'bgr24',      # opencv requires bgr24 pixel format.
+#         '-vcodec', 'rawvideo',
+#         '-an','-sn',              # we want to disable audio processing (there is no audio)
+#         '-f', 'image2pipe', '-']    
+# pipe = sp.Popen(command, stdout = sp.PIPE, bufsize=10**8)
 
-while True:
-    # Capture frame-by-frame
-    raw_image = pipe.stdout.read(320*240*3)
+# q = queue.Queue()
 
-    # transform the byte read into a numpy array
-    # image =  numpy.fromstring(raw_image, dtype='uint8')
-    image =  numpy.frombuffer(raw_image, dtype='uint8')
+def Display(q):
+    while True:
+        if q.empty() != True:
+            image = q.get()
+            if image is not None:
+                cv2.imshow('Video', image)
 
-    # image =  numpy.fromstring(raw_image, dtype='unicode')
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
-    try:
-        image = image.reshape((240,320,3))          # Notice how height is specified first and then width
-    except:
-        continue
+def get_frame(pipe):
+    while True:
+        # Capture frame-by-frame
+        raw_image = pipe.stdout.read(320*240*3)
 
-    if image is not None:
-        cv2.imshow('Video', image)
+        # transform the byte read into a numpy array
+        # image =  numpy.fromstring(raw_image, dtype='uint8')
+        image =  numpy.frombuffer(raw_image, dtype='uint8')
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-    pipe.stdout.flush()
+        # image =  numpy.fromstring(raw_image, dtype='unicode')
+
+        try:
+            image = image.reshape((240,320,3))  
+            q.put(image)        # Notice how height is specified first and then width
+        except:
+            continue
+
+        # if image is not None:
+        #     cv2.imshow('Video', image)
+
+        # if cv2.waitKey(1) & 0xFF == ord('q'):
+        #     break
+        pipe.stdout.flush()
+
+if __name__ == "__main__":
+    FFMPEG_BIN = "ffmpeg"
+    command = [ FFMPEG_BIN,
+            '-i', 'picamera',             # picamera is the named pipe
+            '-pix_fmt', 'bgr24',      # opencv requires bgr24 pixel format.
+            '-vcodec', 'rawvideo',
+            '-an','-sn',              # we want to disable audio processing (there is no audio)
+            '-f', 'image2pipe', '-']    
+    pipe = sp.Popen(command, stdout = sp.PIPE, bufsize=10**8)
+
+    q = queue.Queue()
+    # Display(q)
+    thread2 = Thread(target=Display, args=[q])
+    thread2.start()
+    get_frame(pipe)
+    
 
 cv2.destroyAllWindows()
