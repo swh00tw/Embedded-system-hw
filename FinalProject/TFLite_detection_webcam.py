@@ -151,7 +151,7 @@ def Display(q, buffer):
 def get_frame(pipe):
     while True:
         # Capture frame-by-frame
-        raw_image = pipe.stdout.read(320*240*3)
+        raw_image = pipe.stdout.read(640*480*3)
 
         # transform the byte read into a numpy array
         # image =  numpy.fromstring(raw_image, dtype='uint8')
@@ -160,7 +160,7 @@ def get_frame(pipe):
         # image =  numpy.fromstring(raw_image, dtype='unicode')
 
         try:
-            image = image.reshape((240,320,3))  
+            image = image.reshape((480,640,3))  
             q.put(image)        # Notice how height is specified first and then width
         except:
             continue
