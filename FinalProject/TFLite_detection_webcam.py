@@ -113,14 +113,14 @@ def Display(q, buffer):
             # print(classes)
             # print(scores)
 
-            # print('Frame_num: ', frame_num)
+            print('Frame_num: ', frame_num)
             # print()
-            for i in range(len(scores)):
-                if (scores[i] > min_conf_threshold) and (scores[i]<=1.0):
-                    print('--------------------------------------------------')
-                    print(f'Scores[{i}]: ', scores[i] )
-                    print(f'Classes[{i}]: ', labels[int(classes[i])] )
-                    print(f'Boxes[{i}]: ', boxes[i] )
+            # for i in range(len(scores)):
+            #     if (scores[i] > min_conf_threshold) and (scores[i]<=1.0):
+            #         print('--------------------------------------------------')
+            #         print(f'Scores[{i}]: ', scores[i] )
+            #         print(f'Classes[{i}]: ', labels[int(classes[i])] )
+            #         print(f'Boxes[{i}]: ', boxes[i] )
             # print()
             
 
@@ -157,6 +157,7 @@ def Display(q, buffer):
             t2 = cv2.getTickCount()
             time1 = (t2-t1)/freq
             frame_rate_calc= 1/time1
+            print('FPS: {0:.2f}'.format(frame_rate_calc))
             
 
             # Press 'q' to quit
