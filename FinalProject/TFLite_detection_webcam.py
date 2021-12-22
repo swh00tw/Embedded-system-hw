@@ -1,18 +1,3 @@
-######## Webcam Object Detection Using Tensorflow-trained Classifier #########
-#
-# Author: Evan Juras
-# Date: 10/27/19
-# Description: 
-# This program uses a TensorFlow Lite model to perform object detection on a live webcam
-# feed. It draws boxes and scores around the objects of interest in each frame from the
-# webcam. To improve FPS, the webcam object runs in a separate thread from the main program.
-# This script will work with either a Picamera or regular USB webcam.
-#
-# This code is based off the TensorFlow Lite image classification example at:
-# https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/examples/python/label_image.py
-#
-# I added my own method of drawing boxes and labels using OpenCV.
-
 # Import packages
 import os
 import argparse
@@ -26,54 +11,6 @@ import importlib.util
 import subprocess as sp
 import numpy
 import queue
-
-# Define VideoStream class to handle streaming of video from webcam in separate processing thread
-# Source - Adrian Rosebrock, PyImageSearch: https://www.pyimagesearch.com/2015/12/28/increasing-raspberry-pi-fps-with-python-and-opencv/
-class VideoStream:
-    """Camera object that controls video streaming from the Picamera"""
-    def __init__(self,resolution=(640,480),framerate=30):
-        # Initialize the PiCamera and the camera image stream
-        self.stream = cv2.VideoCapture(0)
-        ret = self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
-        ret = self.stream.set(3,resolution[0])
-        ret = self.stream.set(4,resolution[1])
-            
-        # Read first frame from the stream
-        (self.grabbed, self.frame) = self.stream.read()
-
-	# Variable to control when the camera is stopped
-        self.stopped = False
-
-    def start(self):
-	# Start the thread that reads frames from the video stream
-        Thread(target=self.update,args=()).start()
-        return self
-
-    def update(self):
-        # Keep looping indefinitely until the thread is stopped
-        while True:
-            # If the camera is stopped, stop the thread
-            if self.stopped:
-                # Close camera resources
-                self.stream.release()
-                return
-
-            # Otherwise, grab the next frame from the stream
-            (self.grabbed, self.frame) = self.stream.read()
-
-    def read(self):
-	# Return the most recent frame
-        return self.frame
-
-    def stop(self):
-	# Indicate that the camera and thread should be stopped
-        self.stopped = True
-
-# Initialize video stream
-# ==================================== modified ==========================================================
-# videostream = VideoStream(resolution=(imW,imH),framerate=30).start()
-# time.sleep(1)
-# ======================================================================================================
 
 #for frame1 in camera.capture_continuous(rawCapture, format="bgr",use_video_port=True):
 def Display(q, buffer):
@@ -107,11 +44,6 @@ def Display(q, buffer):
             boxes = interpreter.get_tensor(output_details[0]['index'])[0] # Bounding box coordinates of detected objects
             classes = interpreter.get_tensor(output_details[1]['index'])[0] # Class index of detected objects
             scores = interpreter.get_tensor(output_details[2]['index'])[0] # Confidence of detected objects
-            #num = interpreter.get_tensor(output_details[3]['index'])[0]  # Total number of detected objects (inaccurate and not needed)
-
-            # print(boxes)
-            # print(classes)
-            # print(scores)
 
             print('Frame_num: ', frame_num)
             # print()
@@ -123,42 +55,11 @@ def Display(q, buffer):
             #         print(f'Boxes[{i}]: ', boxes[i] )
             # print()
             
-
-            '''
-            # Loop over all detections and draw detection box if confidence is above minimum threshold
-            for i in range(len(scores)):
-                if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
-
-                    # Get bounding box coordinates and draw box
-                    # Interpreter can return coordinates that are outside of image dimensions, need to force them to be within image using max() and min()
-                    ymin = int(max(1,(boxes[i][0] * imH)))
-                    xmin = int(max(1,(boxes[i][1] * imW)))
-                    ymax = int(min(imH,(boxes[i][2] * imH)))
-                    xmax = int(min(imW,(boxes[i][3] * imW)))
-                    
-                    cv2.rectangle(frame, (xmin,ymin), (xmax,ymax), (10, 255, 0), 2)
-
-                    # Draw label
-                    object_name = labels[int(classes[i])] # Look up object name from "labels" array using class index
-                    label = '%s: %d%%' % (object_name, int(scores[i]*100)) # Example: 'person: 72%'
-                    labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2) # Get font size
-                    label_ymin = max(ymin, labelSize[1] + 10) # Make sure not to draw label too close to top of window
-                    cv2.rectangle(frame, (xmin, label_ymin-labelSize[1]-10), (xmin+labelSize[0], label_ymin+baseLine-10), (255, 255, 255), cv2.FILLED) # Draw white box to put label text in
-                    cv2.putText(frame, label, (xmin, label_ymin-7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2) # Draw label text
-
-            # Draw framerate in corner of frame
-            cv2.putText(frame,'FPS: {0:.2f}'.format(frame_rate_calc),(30,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,0),2,cv2.LINE_AA)
-
-            # All the results have been drawn on the frame, so it's time to display it.
-            cv2.imshow('Object detector', frame)
-            '''
-
             # Calculate framerate
             t2 = cv2.getTickCount()
             time1 = (t2-t1)/freq
             frame_rate_calc= 1/time1
             print('FPS: {0:.2f}'.format(frame_rate_calc))
-            
 
             # Press 'q' to quit
             if cv2.waitKey(1) == ord('q'):
@@ -181,11 +82,6 @@ def get_frame(pipe):
         except:
             continue
 
-        # if image is not None:
-        #     cv2.imshow('Video', image)
-
-        # if cv2.waitKey(1) & 0xFF == ord('q'):
-        #     break
         pipe.stdout.flush()
 
 
