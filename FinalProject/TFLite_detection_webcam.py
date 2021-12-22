@@ -77,8 +77,10 @@ class VideoStream:
 
 #for frame1 in camera.capture_continuous(rawCapture, format="bgr",use_video_port=True):
 def Display(q, buffer):
+    frame_num=0
     while True:
         if q.empty() != True:
+            frame_num+=1
             frame_rate_calc=buffer[0]
             # Start timer (for calculating frame rate)
             t1 = cv2.getTickCount()
@@ -107,10 +109,22 @@ def Display(q, buffer):
             scores = interpreter.get_tensor(output_details[2]['index'])[0] # Confidence of detected objects
             #num = interpreter.get_tensor(output_details[3]['index'])[0]  # Total number of detected objects (inaccurate and not needed)
 
-            print(boxes)
-            print(classes)
-            print(scores)
+            # print(boxes)
+            # print(classes)
+            # print(scores)
 
+            # print('Frame_num: ', frame_num)
+            # print()
+            for i in range(len(scores)):
+                if (scores[i] > min_conf_threshold) and (scores[i]<=1.0):
+                    print('--------------------------------------------------')
+                    print(f'Scores[{i}]: ', scores[i] )
+                    print(f'Classes[{i}]: ', labels[int(classes[i])] )
+                    print(f'Boxes[{i}]: ', boxes[i] )
+            # print()
+            
+
+            '''
             # Loop over all detections and draw detection box if confidence is above minimum threshold
             for i in range(len(scores)):
                 if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
@@ -137,12 +151,13 @@ def Display(q, buffer):
 
             # All the results have been drawn on the frame, so it's time to display it.
             cv2.imshow('Object detector', frame)
-            cv2.waitKey()
+            '''
 
             # Calculate framerate
             t2 = cv2.getTickCount()
             time1 = (t2-t1)/freq
             frame_rate_calc= 1/time1
+            
 
             # Press 'q' to quit
             if cv2.waitKey(1) == ord('q'):
@@ -203,6 +218,7 @@ if __name__ == "__main__":
     # If tflite_runtime is installed, import interpreter from tflite_runtime, else import from regular tensorflow
     # If using Coral Edge TPU, import the load_delegate library
     pkg = importlib.util.find_spec('tflite_runtime')
+    #print('pkg: ',pkg)
     if pkg:
         from tflite_runtime.interpreter import Interpreter
         if use_TPU:
@@ -277,7 +293,7 @@ if __name__ == "__main__":
     # Display(q)
     thread2 = Thread(target=get_frame, args=[pipe])
     thread2.start()
-    Display(q)
+    Display(q, buffer)
 
 # Clean up
 cv2.destroyAllWindows()
