@@ -1,15 +1,87 @@
+# -------------------------------------------------------------- #
+#                      USELESS & DEPRECATED                      #
+# -------------------------------------------------------------- #
+
 # Import packages
 import os
 import argparse
 import cv2
 import numpy as np
+import sys
+import time
 from threading import Thread
 import importlib.util
 
 import subprocess as sp
+import numpy
 import queue
+from tensorflow.lite.python.interpreter import Interpreter
 
-from utils import display, get_frame
+#for frame1 in camera.capture_continuous(rawCapture, format="bgr",use_video_port=True):
+def display(q):
+    frame_num=0
+    while True:
+        if q.empty() != True:
+            frame_num+=1
+            frame_rate_calc=0
+            # Start timer (for calculating frame rate)
+            t1 = cv2.getTickCount()
+
+            # Grab frame from video stream
+            #frame1 = videostream.read()
+            frame1 = q.get()
+
+            # Acquire frame and resize to expected shape [1xHxWx3]
+            frame = frame1.copy()
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame_resized = cv2.resize(frame_rgb, (width, height))
+            input_data = np.expand_dims(frame_resized, axis=0)
+
+            # Normalize pixel values if using a floating model (i.e. if model is non-quantized)
+            if floating_model: # False
+                input_data = (np.float32(input_data) - input_mean) / input_std
+
+            # Perform the actual detection by running the model with the image as input
+            interpreter.set_tensor(input_details[0]['index'],input_data)
+            interpreter.invoke()
+
+            # Retrieve detection results
+            boxes = interpreter.get_tensor(output_details[0]['index'])[0] # Bounding box coordinates of detected objects
+            classes = interpreter.get_tensor(output_details[1]['index'])[0] # Class index of detected objects
+            scores = interpreter.get_tensor(output_details[2]['index'])[0] # Confidence of detected objects
+
+            print('Frame_num: ', frame_num)
+            # print()
+            # for i in range(len(scores)):
+            #     if (scores[i] > min_conf_threshold) and (scores[i]<=1.0):
+            #         print('--------------------------------------------------')
+            #         print(f'Scores[{i}]: ', scores[i] )
+            #         print(f'Classes[{i}]: ', labels[int(classes[i])] )
+            #         print(f'Boxes[{i}]: ', boxes[i] )
+            # print()
+            
+            # Calculate framerate
+            t2 = cv2.getTickCount()
+            time1 = (t2-t1)/freq
+            frame_rate_calc= 1/time1
+            print('FPS: {0:.2f}'.format(frame_rate_calc))
+
+            # Press 'q' to quit
+            if cv2.waitKey(1) == ord('q'):
+                break
+
+def get_frame(pipe,q):
+    while True:
+        # Capture frame-by-frame
+        raw_image = pipe.stdout.read(640*480*3)
+        # transform the byte read into a numpy array
+        image =  numpy.frombuffer(raw_image, dtype='uint8')
+        try:
+            image = image.reshape((480,640,3))  
+            q.put(image)        # Notice how height is specified first and then width
+        except:
+            continue
+        pipe.stdout.flush()
 
 if __name__ == "__main__":
     # Define and parse input arguments
@@ -36,12 +108,13 @@ if __name__ == "__main__":
     resW, resH = args.resolution.split('x')
     imW, imH = int(resW), int(resH)
     use_TPU = args.edgetpu
+    # print("use_TPU: ",use_TPU) # False
 
     # Import TensorFlow libraries
     # If tflite_runtime is installed, import interpreter from tflite_runtime, else import from regular tensorflow
     # If using Coral Edge TPU, import the load_delegate library
     pkg = importlib.util.find_spec('tflite_runtime')
-    #print('pkg: ',pkg)
+    # print('pkg: ',pkg) # None
     if pkg:
         from tflite_runtime.interpreter import Interpreter
         if use_TPU:
@@ -94,12 +167,12 @@ if __name__ == "__main__":
     width = input_details[0]['shape'][2]
 
     floating_model = (input_details[0]['dtype'] == np.float32)
+    # print("Floating-model: ",floating_model) # False
 
     input_mean = 127.5
     input_std = 127.5
 
     # Initialize frame rate calculation
-    frame_rate_calc = 1
     freq = cv2.getTickFrequency()
 
     FFMPEG_BIN = "ffmpeg"
@@ -112,11 +185,9 @@ if __name__ == "__main__":
     pipe = sp.Popen(command, stdout = sp.PIPE, bufsize=10**8)
 
     q = queue.Queue()
-    buffer=[frame_rate_calc]
-    # Display(q)
-    thread2 = Thread(target=get_frame, args=[pipe])
+    thread2 = Thread(target=get_frame, args=[pipe,q])
     thread2.start()
-    Display(q, buffer)
+    display(q)
 
 # Clean up
 cv2.destroyAllWindows()
