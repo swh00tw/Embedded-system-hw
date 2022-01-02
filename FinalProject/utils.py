@@ -13,12 +13,12 @@ import numpy
 import queue
 
 #for frame1 in camera.capture_continuous(rawCapture, format="bgr",use_video_port=True):
-def display(q, buffer):
+def display(q):
     frame_num=0
     while True:
         if q.empty() != True:
             frame_num+=1
-            frame_rate_calc=buffer[0]
+            frame_rate_calc=0
             # Start timer (for calculating frame rate)
             t1 = cv2.getTickCount()
 
@@ -65,23 +65,17 @@ def display(q, buffer):
             if cv2.waitKey(1) == ord('q'):
                 break
 
-def get_frame(pipe):
+def get_frame(pipe,q):
     while True:
         # Capture frame-by-frame
         raw_image = pipe.stdout.read(640*480*3)
-
         # transform the byte read into a numpy array
-        # image =  numpy.fromstring(raw_image, dtype='uint8')
         image =  numpy.frombuffer(raw_image, dtype='uint8')
-
-        # image =  numpy.fromstring(raw_image, dtype='unicode')
-
         try:
             image = image.reshape((480,640,3))  
             q.put(image)        # Notice how height is specified first and then width
         except:
             continue
-
         pipe.stdout.flush()
 
 
@@ -172,8 +166,6 @@ if __name__ == "__main__":
     input_mean = 127.5
     input_std = 127.5
 
-    # Initialize frame rate calculation
-    frame_rate_calc = 1
     freq = cv2.getTickFrequency()
 
     FFMPEG_BIN = "ffmpeg"
@@ -186,10 +178,9 @@ if __name__ == "__main__":
     pipe = sp.Popen(command, stdout = sp.PIPE, bufsize=10**8)
 
     q = queue.Queue()
-    buffer=[frame_rate_calc]
-    thread2 = Thread(target=get_frame, args=[pipe])
+    thread2 = Thread(target=get_frame, args=[pipe,q])
     thread2.start()
-    display(q, buffer)
+    display(q)
 
 # Clean up
 cv2.destroyAllWindows()
