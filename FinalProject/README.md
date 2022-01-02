@@ -19,7 +19,7 @@ Then,
 
 ```
 # open another terminal
-python3 TFLite_detection_webcam.py --modeldir=Sample_TFLite_model
+python3 run_model_example.py
 ```
 
 And use Rpi terminal type:
