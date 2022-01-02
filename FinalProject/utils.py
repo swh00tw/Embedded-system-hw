@@ -78,6 +78,19 @@ def get_frame(pipe,q):
             continue
         pipe.stdout.flush()
 
+class VideoCamera():
+    def __init__(self, pipe_name='picamera'):
+        self.frame_queue = queue.Queue()
+        
+        FFMPEG_BIN = "ffmpeg"
+        command = [ FFMPEG_BIN,
+                '-i', pipe_name,             # picamera is the named pipe
+                '-pix_fmt', 'bgr24',      # opencv requires bgr24 pixel format.
+                '-vcodec', 'rawvideo',
+                '-an','-sn',              # we want to disable audio processing (there is no audio)
+                '-f', 'image2pipe', '-']    
+        self.pipe = sp.Popen(command, stdout = sp.PIPE, bufsize=10**8)
+
 
 if __name__ == "__main__":
     # Define and parse input arguments
@@ -168,19 +181,20 @@ if __name__ == "__main__":
 
     freq = cv2.getTickFrequency()
 
-    FFMPEG_BIN = "ffmpeg"
-    command = [ FFMPEG_BIN,
-            '-i', 'picamera',             # picamera is the named pipe
-            '-pix_fmt', 'bgr24',      # opencv requires bgr24 pixel format.
-            '-vcodec', 'rawvideo',
-            '-an','-sn',              # we want to disable audio processing (there is no audio)
-            '-f', 'image2pipe', '-']    
-    pipe = sp.Popen(command, stdout = sp.PIPE, bufsize=10**8)
+    # FFMPEG_BIN = "ffmpeg"
+    # command = [ FFMPEG_BIN,
+    #         '-i', 'picamera',             # picamera is the named pipe
+    #         '-pix_fmt', 'bgr24',      # opencv requires bgr24 pixel format.
+    #         '-vcodec', 'rawvideo',
+    #         '-an','-sn',              # we want to disable audio processing (there is no audio)
+    #         '-f', 'image2pipe', '-']    
+    # pipe = sp.Popen(command, stdout = sp.PIPE, bufsize=10**8)
 
-    q = queue.Queue()
-    thread2 = Thread(target=get_frame, args=[pipe,q])
+    # q = queue.Queue()
+    camera = VideoCamera('picamera')
+    thread2 = Thread(target=get_frame, args=[camera.pipe, camera.frame_queue])
     thread2.start()
-    display(q)
+    display(camera.frame_queue)
 
 # Clean up
 cv2.destroyAllWindows()
