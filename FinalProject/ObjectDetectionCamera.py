@@ -122,3 +122,21 @@ class ObjectDetectionCamera():
             except:
                 continue
             self.pipe.stdout.flush()
+
+    def print_all_data(self):
+        print('frame_queue: ', self.frame_queue)
+        print('pipe: ', self.pipe)
+        print('Freq: ', self.freq)
+        print('model_dir: ', self.modeldir)
+        print('graph_name: ', self.graph_name)
+        print('label_name: ', self.label_name)
+        print('threshold: ', self.min_conf_threshold)
+        print('resolution: ', [self.imW, self.imH])
+        print('Labels: ', self.labels)
+        print('Interpreter: ', self.interpreter)
+        print('input_details: ', self.input_details)
+        print('output_details: ', self.output_details)
+        print('height: ', self.height)
+        print('width: ', self.width)
+        print('input_mean: ', self.input_mean)
+        print('input_std: ', self.input_std)
