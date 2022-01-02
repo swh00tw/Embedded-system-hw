@@ -1,3 +1,7 @@
+# -------------------------------------------------------------- #
+#                      USELESS & DEPRECATED                      #
+# -------------------------------------------------------------- #
+
 # Import packages
 import os
 import argparse
@@ -11,6 +15,7 @@ import importlib.util
 import subprocess as sp
 import numpy
 import queue
+from tensorflow.lite.python.interpreter import Interpreter
 
 #for frame1 in camera.capture_continuous(rawCapture, format="bgr",use_video_port=True):
 def display(q):
@@ -33,7 +38,7 @@ def display(q):
             input_data = np.expand_dims(frame_resized, axis=0)
 
             # Normalize pixel values if using a floating model (i.e. if model is non-quantized)
-            if floating_model:
+            if floating_model: # False
                 input_data = (np.float32(input_data) - input_mean) / input_std
 
             # Perform the actual detection by running the model with the image as input
@@ -78,20 +83,6 @@ def get_frame(pipe,q):
             continue
         pipe.stdout.flush()
 
-class VideoCamera():
-    def __init__(self, pipe_name='picamera'):
-        self.frame_queue = queue.Queue()
-        
-        FFMPEG_BIN = "ffmpeg"
-        command = [ FFMPEG_BIN,
-                '-i', pipe_name,             # picamera is the named pipe
-                '-pix_fmt', 'bgr24',      # opencv requires bgr24 pixel format.
-                '-vcodec', 'rawvideo',
-                '-an','-sn',              # we want to disable audio processing (there is no audio)
-                '-f', 'image2pipe', '-']    
-        self.pipe = sp.Popen(command, stdout = sp.PIPE, bufsize=10**8)
-
-
 if __name__ == "__main__":
     # Define and parse input arguments
     parser = argparse.ArgumentParser()
@@ -117,12 +108,13 @@ if __name__ == "__main__":
     resW, resH = args.resolution.split('x')
     imW, imH = int(resW), int(resH)
     use_TPU = args.edgetpu
+    # print("use_TPU: ",use_TPU) # False
 
     # Import TensorFlow libraries
     # If tflite_runtime is installed, import interpreter from tflite_runtime, else import from regular tensorflow
     # If using Coral Edge TPU, import the load_delegate library
     pkg = importlib.util.find_spec('tflite_runtime')
-    #print('pkg: ',pkg)
+    # print('pkg: ',pkg) # None
     if pkg:
         from tflite_runtime.interpreter import Interpreter
         if use_TPU:
@@ -175,26 +167,27 @@ if __name__ == "__main__":
     width = input_details[0]['shape'][2]
 
     floating_model = (input_details[0]['dtype'] == np.float32)
+    # print("Floating-model: ",floating_model) # False
 
     input_mean = 127.5
     input_std = 127.5
 
+    # Initialize frame rate calculation
     freq = cv2.getTickFrequency()
 
-    # FFMPEG_BIN = "ffmpeg"
-    # command = [ FFMPEG_BIN,
-    #         '-i', 'picamera',             # picamera is the named pipe
-    #         '-pix_fmt', 'bgr24',      # opencv requires bgr24 pixel format.
-    #         '-vcodec', 'rawvideo',
-    #         '-an','-sn',              # we want to disable audio processing (there is no audio)
-    #         '-f', 'image2pipe', '-']    
-    # pipe = sp.Popen(command, stdout = sp.PIPE, bufsize=10**8)
+    FFMPEG_BIN = "ffmpeg"
+    command = [ FFMPEG_BIN,
+            '-i', 'picamera',             # picamera is the named pipe
+            '-pix_fmt', 'bgr24',      # opencv requires bgr24 pixel format.
+            '-vcodec', 'rawvideo',
+            '-an','-sn',              # we want to disable audio processing (there is no audio)
+            '-f', 'image2pipe', '-']    
+    pipe = sp.Popen(command, stdout = sp.PIPE, bufsize=10**8)
 
-    # q = queue.Queue()
-    camera = VideoCamera('picamera')
-    thread2 = Thread(target=get_frame, args=[camera.pipe, camera.frame_queue])
+    q = queue.Queue()
+    thread2 = Thread(target=get_frame, args=[pipe,q])
     thread2.start()
-    display(camera.frame_queue)
+    display(q)
 
 # Clean up
 cv2.destroyAllWindows()
